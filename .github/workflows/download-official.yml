@@ -3,66 +3,42 @@ name: Download Official 5eTools Data
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 2 * * 1'   # Cada lunes 02:00 UTC
+    - cron: '0 2 * * 1' # Cada lunes 02:00 UTC
 
 permissions:
   contents: write
 
-concurrency:
-  group: download-official
-  cancel-in-progress: true
-
 jobs:
   fetch_and_filter:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
       - name: Prepare folders
         run: |
-          rm -rf data/raw data/official tmp data.zip
-          mkdir -p data/raw data/official tmp
+          rm -rf data/official
+          mkdir -p data/official
 
-      - name: Download 5eTools data (official)
+      - name: Download official JSON files
         run: |
-          curl -L https://api.github.com/repos/thegiddylimit/5etools-data/zipball/master -o data.zip
-          unzip -q data.zip -d tmp
-          # Mueve TODO el árbol /data del repo oficial a data/raw
-          rsync -a tmp/5etools-data-master/data/ data/raw/
+          BASE="https://5e.tools/data"
+          curl -L "$BASE/class/class.json" -o data/official/class.json
+          curl -L "$BASE/race/races.json" -o data/official/races.json
+          curl -L "$BASE/spells/spells-phb.json" -o data/official/spells-phb.json
+          curl -L "$BASE/spells/spells-xge.json" -o data/official/spells-xge.json
+          curl -L "$BASE/item/items-dmg.json" -o data/official/items-dmg.json
+          curl -L "$BASE/monster/monsters-mm.json" -o data/official/monsters-mm.json
+          curl -L "$BASE/background/backgrounds.json" -o data/official/backgrounds.json
+          curl -L "$BASE/feat/feats.json" -o data/official/feats.json
+          curl -L "$BASE/condition/conditions.json" -o data/official/conditions.json
+          curl -L "$BASE/spells/spells-tce.json" -o data/official/spells-tce.json
 
-      - name: Remove files that look like UA/homebrew by filename
+      - name: Commit and push
         run: |
-          # Limpieza rápida por nombre de archivo/carpeta
-          find data/raw -type d -iname "*brew*" -exec rm -rf {} + || true
-          find data/raw -type f \( -iname "*ua*" -o -iname "*playtest*" -o -iname "*homebrew*" -o -iname "*brew*" \) -delete || true
-
-      - name: Install deps
-        run: |
-          npm ci || npm i
-
-      - name: Filter JSON entries by "source" metadata
-        run: |
-          node scripts/filter.js data/raw data/official
-
-      - name: Commit and push changes
-        run: |
-          if [ -n "$(git status --porcelain)" ]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "actions@github.com"
-            git add data/official
-            git commit -m "Update official D&D data (auto)"
-            git push
-          else
-            echo "No changes to commit."
-          fi
-
-      - name: Cleanup temp
-        if: always()
-        run: |
-          rm -rf tmp data.zip
+          git config user.name "github-actions[bot]"
+          git config user.email "actions@github.com"
+          git add data/official
+          git diff --quiet && git diff --staged --quiet || git commit -m "Update 5eTools data (direct CDN)"
+          git push || echo "No changes to push"

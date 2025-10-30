@@ -1,0 +1,14 @@
+{
+  "name": "dnd-official-data",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Auto-descarga y filtrado de datos oficiales 5eTools (sin UA/homebrew) via GitHub Actions",
+  "license": "UNLICENSED",
+  "scripts": {
+    "filter": "node scripts/filter.js data/raw data/official"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
+    

@@ -1,0 +1,10 @@
+# node
+node_modules
+package-lock.json
+
+# tmp
+tmp
+data.zip
+
+# action outputs
+data/raw

@@ -31,7 +31,7 @@ jobs:
 
       - name: Download 5eTools data (official)
         run: |
-          curl -L https://github.com/thegiddylimit/5etools-data/archive/refs/heads/master.zip -o data.zip
+          curl -L https://api.github.com/repos/thegiddylimit/5etools-data/zipball/master -o data.zip
           unzip -q data.zip -d tmp
           # Mueve TODO el árbol /data del repo oficial a data/raw
           rsync -a tmp/5etools-data-master/data/ data/raw/
